@@ -13,6 +13,7 @@ from tensorflow.keras.models import load_model
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
+import sys
 
 if __name__ == '__main__':
     local_model_path='..\..\models\localModels\\'
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     #data path
     paths_clients=glob.glob(os.path.abspath('..\..')+"\data\ClientsData\*")
     #rounds
-    rounds=100
+    rounds=int(sys.argv[1])
     #optimiser
     learning_rate = 0.01 
     loss='categorical_crossentropy'
@@ -34,20 +35,30 @@ if __name__ == '__main__':
     init_weights=init_model.get_weights()
 
     gm=ModelClass(model_name="Global_Model",class_name=init_model.__class__.__name__,model_init=init_model,model_local=None)
-    for rounds in range(2):
+    
+    #cleaning the models folder
+    files_local=  glob.glob(local_model_path+'*')
+    files_global= glob.glob(global_model_path+'*')
+   
+    for f in files_local:
+        os.remove(f)
+
+    for f in files_global:
+        os.remove(f)
+
+    #start traing by rounds
+    for round in range(rounds):
         clts_models=[]
         scaled_local_weight_list = list()
         print('start executing the round : ' + str(rounds))
-        for clt in range(10):
+        for clt in range(len(paths_clients)):
             print("Train the client : " +  str(clt))
             data=open(paths_clients[clt],'rb')
             data_clt=pickle.load(data)
             local_model=copy.copy(init_model)
             local_model.compile(loss=loss,optimizer=optimizer,metrics=metrics)
             local_model.set_weights(init_weights)
-            print(len(data_clt.X_train))
-            print(len(data_clt.y_train))
-            clt_model=local_model.fit(tf.stack(data_clt.X_train),tf.stack(data_clt.y_train),epochs=5,batch_size=100)
+            clt_model=local_model.fit(tf.stack(data_clt.X_train),tf.stack(data_clt.y_train),epochs=int(sys.argv[2]),batch_size=100)
             local_model.save(local_model_path+"Client_"+str(clt)+'.h5')
             mdl_obj=ModelClass(model_name="Client_"+str(clt),class_name=local_model.__class__.__name__,model_init=None,model_local=os.path.abspath(local_model_path+"Client_"+str(clt)+'.h5'))
             print(mdl_obj)
@@ -59,15 +70,18 @@ if __name__ == '__main__':
             scaled_local_weight_list.append(model.scale_weights(load_model(clts_models[local_client].model_local).get_weights(),pickle.load(f)))
             f.close()
         
-
+        #clean tf session 
         tf.keras.backend.clear_session()
+
+        # Averging the weights
+        print("Avereging the weights")
         new_weights=model.avg_weights(scaled_local_weight_list)
         init_model.set_weights(new_weights)
         init_model.compile(loss=loss,optimizer=optimizer,metrics=metrics)
         init_model.save(global_model_path+datetime.datetime.today().strftime ('%H-%M-%S-%d-%b-%Y')+'.h5')
 
         print('Evaluating gloabal models')
-        for clt in range(10):
+        for clt in range(len(paths_clients)):
             print("Evaluate the client : " +  str(clt))
             data=open(paths_clients[clt],'rb')
             data_clt=pickle.load(data)
