@@ -72,6 +72,7 @@ def main(participants,rounds,epochs,batch):
             print("No need for selection")
         else:
             paths_clients=random.choice(list(select.randomselection(os.path.abspath('..\..')+"\data\ClientsData\\",2)))
+
         print("Used clients...")
         print(paths_clients)
         print(paths_clients[0].split('\\')[-1])
@@ -105,7 +106,6 @@ def main(participants,rounds,epochs,batch):
         init_model.set_weights(new_weights)
         init_model.compile(loss=loss,optimizer=optimizer,metrics=metrics)
         init_model.save(global_model_path+datetime.datetime.today().strftime ('%H-%M-%S-%d-%b-%Y')+"_round_"+str(round)+'.h5')
-        print("Hado init weights :")
 
         # Evaluation Step
         print('Evaluating gloabal models')
