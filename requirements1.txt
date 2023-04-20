@@ -1,0 +1,12 @@
+alive_progress
+click
+dataclasses_json
+dill
+imutils
+numpy
+opencv_contrib_python
+pandas
+python-dotenv
+scikit_learn
+setuptools
+tensorflow

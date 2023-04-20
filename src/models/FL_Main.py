@@ -40,7 +40,7 @@ if __name__ == '__main__':
     learning_rate = 0.01 
     loss='categorical_crossentropy'
     metrics = ['accuracy']
-    optimizer = SGD(learning_rate=learning_rate,decay=learning_rate /rounds,momentum=0.9) 
+    optimizer = SGD(learning_rate=learning_rate,momentum=0.9) 
     
     # Intialize global models
     model=Model()
